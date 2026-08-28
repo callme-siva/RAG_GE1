@@ -2,7 +2,7 @@ import os
 import chromadb
 import streamlit as st
 from sentence_transformers import SentenceTransformer
-from anthropic import Anthropic
+import google.generativeai as genai
 
 # ============================================================
 # 1. Page setup
@@ -14,20 +14,16 @@ st.title("📚 Siva Mini RAG")
 # 2. Load API key (Streamlit secrets first, env var as fallback)
 # ============================================================
 try:
-    api_key = st.secrets["ANTHROPIC_API_KEY"]
+    api_key = st.secrets["GEMINI_API_KEY"]
 except Exception:
-    api_key = os.getenv("ANTHROPIC_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
-    st.error("ANTHROPIC_API_KEY not found. Add it in Streamlit's Secrets settings.")
+    st.error("GEMINI_API_KEY not found. Add it in Streamlit's Secrets settings.")
     st.stop()
 
 # ============================================================
 # 3. Cache the heavy resources so they load once, not every rerun
 # ============================================================
-@st.cache_resource
-def load_claude_client():
-    return Anthropic(api_key=api_key)
-
 @st.cache_resource
 def load_embedding_model():
     return SentenceTransformer("all-MiniLM-L6-v2")
@@ -37,12 +33,12 @@ def load_collection():
     chroma_client = chromadb.PersistentClient(path="chroma_db")
     return chroma_client.get_collection(name="documents")
 
-claude = load_claude_client()
+genai.configure(api_key=api_key)
 embedding_model = load_embedding_model()
 collection = load_collection()
 
 # ============================================================
-# 4. Retrieve relevant chunks (unchanged)
+# 4. Retrieve relevant chunks
 # ============================================================
 def retrieve_documents(question):
     question_embedding = embedding_model.encode(question).tolist()
@@ -55,7 +51,7 @@ def retrieve_documents(question):
     return documents, metadatas
 
 # ============================================================
-# 5. Generate answer (unchanged)
+# 5. Generate answer with Gemini
 # ============================================================
 def generate_answer(question, documents, metadatas):
     context_parts = []
@@ -88,16 +84,9 @@ QUESTION
 ==============================
 {question}
 """
-    response = claude.messages.create(
-        model="claude-sonnet-5",
-        max_tokens=500,
-        messages=[{"role": "user", "content": prompt}]
-    )
-    answer = ""
-    for block in response.content:
-        if block.type == "text":
-            answer += block.text
-    return answer
+    model = genai.GenerativeModel("gemini-2.0-flash")
+    response = model.generate_content(prompt)
+    return response.text
 
 # ============================================================
 # 6. Chat UI
