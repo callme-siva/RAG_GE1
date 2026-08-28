@@ -33,7 +33,7 @@ def load_collection():
     chroma_client = chromadb.PersistentClient(path="chroma_db")
     return chroma_client.get_collection(name="documents")
 
-gemini_client = genai.Client(api_key=api_key)
+gemini_client = genai.Client(api_key=api_key, http_options={"api_version": "v1"})
 embedding_model = load_embedding_model()
 collection = load_collection()
 
@@ -85,7 +85,7 @@ QUESTION
 {question}
 """
     response = gemini_client.models.generate_content(
-        model="gemini-1.5-flash-001",
+        model="gemini-2.0-flash",
         contents=prompt
     )
     return response.text
