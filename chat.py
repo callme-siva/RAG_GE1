@@ -8,12 +8,15 @@ from anthropic import Anthropic
 # 1. Page setup
 # ============================================================
 st.set_page_config(page_title="Mini RAG", page_icon="📚")
-st.title("📚 Mini RAG")
+st.title("📚 Siva Mini RAG")
 
 # ============================================================
 # 2. Load API key (Streamlit secrets first, env var as fallback)
 # ============================================================
-api_key = st.secrets.get("ANTHROPIC_API_KEY", os.getenv("ANTHROPIC_API_KEY"))
+try:
+    api_key = st.secrets["ANTHROPIC_API_KEY"]
+except Exception:
+    api_key = os.getenv("ANTHROPIC_API_KEY")
 if not api_key:
     st.error("ANTHROPIC_API_KEY not found. Add it in Streamlit's Secrets settings.")
     st.stop()
