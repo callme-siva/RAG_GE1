@@ -1,5 +1,5 @@
 pymupdf
 chromadb
 sentence-transformers
-google-generativeai
+google-genai
 python-dotenv
