@@ -85,7 +85,7 @@ QUESTION
 {question}
 """
     response = gemini_client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-1.5-flash",
         contents=prompt
     )
     return response.text
@@ -110,7 +110,11 @@ if question:
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             documents, metadatas = retrieve_documents(question)
-            answer = generate_answer(question, documents, metadatas)
+            try:
+                answer = generate_answer(question, documents, metadatas)
+            except Exception as e:
+                st.error(f"Gemini API error: {e}")
+                st.stop()
         st.write(answer)
         with st.expander("Sources"):
             for m in metadatas:
